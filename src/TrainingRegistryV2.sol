@@ -60,7 +60,7 @@ contract TrainingRegistryV2 is
 
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         _setURI(newBaseURI);
-        _baseDirectoryURI = newBaseURI;
+        _baseDirectoryUri = newBaseURI;
         emit BaseURISet(newBaseURI);
     }
 
@@ -163,7 +163,7 @@ contract TrainingRegistryV2 is
     }
 
     function uri(uint256 tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(_baseDirectoryURI, _paddedDecimal(tokenId, uriPadDigits), ".json"));
+        return string(abi.encodePacked(_baseDirectoryUri, _paddedDecimal(tokenId, uriPadDigits), ".json"));
     }
 
     function _paddedDecimal(uint256 value, uint8 minDigits) internal pure returns (string memory) {
@@ -172,7 +172,7 @@ contract TrainingRegistryV2 is
         if (len >= minDigits) return dec;
         uint256 pad = uint256(minDigits) - len;
         bytes memory zeros = new bytes(pad);
-        for (uint256 i = 0; i < pad; i++) zeros[i] = bytes1("0");
+        for (uint256 i = 0; i < pad; i++) zeros[i] = 0x30;
         return string(abi.encodePacked(zeros, dec));
     }
 
@@ -201,8 +201,8 @@ contract TrainingRegistryV2 is
     // ========================================
     // STORAGE LAYOUT (matches V1 exactly, then adds V2)
     // ========================================
-    string private _baseDirectoryURI;     // Slot 5 (from V1)
+    string private _baseDirectoryUri;     // Slot 5 (from V1)
     uint8 public uriPadDigits;            // Slot 6 (from V1)
-    uint256[37] private __gap;            // Slots 7-43 (reduced from 38)
+    uint256[37] private _gap;            // Slots 7-43 (reduced from 38)
     uint256 public batchSubmissionCount;  // Slot 44 (NEW in V2)
 }

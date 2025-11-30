@@ -58,7 +58,6 @@ contract TrainingRegistryV1 is
         __ERC1155_init(baseURI);
         __Pausable_init();
         __Ownable2Step_init();
-        __UUPSUpgradeable_init();
         __EIP712_init(eip712Name, eip712Version);
 
         _transferOwnership(initialOwner);
@@ -66,7 +65,7 @@ contract TrainingRegistryV1 is
         require(_claimant != address(0), "Invalid claimant address");  // LINE 3 ADDED
         claimant = _claimant;  // LINE 4 ADDED
 
-        _baseDirectoryURI = baseURI;
+        _baseDirectoryUri = baseURI;
         uriPadDigits = 4;
     }
 
@@ -77,7 +76,7 @@ contract TrainingRegistryV1 is
 
     function setBaseURI(string memory newBaseURI) external onlyOwner {
         _setURI(newBaseURI);
-        _baseDirectoryURI = newBaseURI;
+        _baseDirectoryUri = newBaseURI;
         emit BaseURISet(newBaseURI);
     }
 
@@ -92,6 +91,7 @@ contract TrainingRegistryV1 is
     function submitVoucher(uint256 taskCode, bytes calldata signature) external whenNotPaused {
         require(!completed[msg.sender][taskCode], "already completed");
 
+        // using abi.encode instead of inline assembly as its more readable and easier to understand
         bytes32 structHash = keccak256(abi.encode(VOUCHER_TYPEHASH, taskCode, msg.sender));
         bytes32 digest = MessageHashUtils.toTypedDataHash(_domainSeparatorV4(), structHash);
         address signer = ECDSA.recover(digest, signature);
@@ -132,7 +132,7 @@ contract TrainingRegistryV1 is
     }
 
     function uri(uint256 tokenId) public view override returns (string memory) {
-        return string(abi.encodePacked(_baseDirectoryURI, _paddedDecimal(tokenId, uriPadDigits), ".json"));
+        return string(abi.encodePacked(_baseDirectoryUri, _paddedDecimal(tokenId, uriPadDigits), ".json"));
     }
 
     function _paddedDecimal(uint256 value, uint8 minDigits) internal pure returns (string memory) {
@@ -141,7 +141,7 @@ contract TrainingRegistryV1 is
         if (len >= minDigits) return dec;
         uint256 pad = uint256(minDigits) - len;
         bytes memory zeros = new bytes(pad);
-        for (uint256 i = 0; i < pad; i++) zeros[i] = bytes1("0");
+        for (uint256 i = 0; i < pad; i++) zeros[i] = 0x30;
         return string(abi.encodePacked(zeros, dec));
     }
 
@@ -167,7 +167,7 @@ contract TrainingRegistryV1 is
 
     function _authorizeUpgrade(address newImplementation) internal override onlyOwner {}
 
-    string private _baseDirectoryURI;
+    string private _baseDirectoryUri;
     uint8 public uriPadDigits;
-    uint256[38] private __gap;
+    uint256[38] private _gap;
 }
